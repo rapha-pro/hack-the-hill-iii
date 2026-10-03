@@ -48,6 +48,8 @@ Neither one shows a person what *their* money paid for, and neither turns "that 
 | 6 | Petitions | Campaigns our team turned into official e-petitions, with live signature counts from ourcommons.ca. |
 | Admin | /admin | Our team reviews campaigns, emails an MP, attaches the official petition number, and moves campaigns through their stages. |
 
+Browsing needs no account. Visitors can see the receipt, the stories, every campaign and every petition without signing in. Auth0 login is asked for only when someone acts: starting, joining, leaving or editing a campaign. The header also has an optional "Log in" link.
+
 ```mermaid
 flowchart LR
     A["Start<br/>income + province"] --> B["Receipt<br/>federal tax by program"]
@@ -331,6 +333,7 @@ Admin routes check `ADMIN_EMAILS` on the server and answer 404 to everyone else,
 | Rule | How it is enforced |
 |---|---|
 | Income never leaves the device | The tax calculation runs in the browser; no API takes income as input. |
+| No account needed to look | Public pages and read-only APIs work logged out. Routes that change data, or return private data, check the session themselves (`requireUser`, or `requireAdmin`, which answers 404). |
 | Postal codes are not stored | The API turns a postal code into a riding through the Represent API and saves only the riding. A test checks that no postal code reaches the database. |
 | Sharing needs consent | Joining requires `consent: true`. Only members who consented are in the list our team sends to an MP. |
 | Members are shown by first name only | Public lists show the starter's first name, or "Someone" if the account name is an email address. |

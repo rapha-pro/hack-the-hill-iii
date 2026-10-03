@@ -33,24 +33,29 @@ describe("proxy", () => {
     expect(auth0.getSession).not.toHaveBeenCalled();
   });
 
-  it("passes logged-in requests through Auth0's response", async () => {
+  it("lets logged-out visitors browse every public page and API without asking them to log in", async () => {
+    for (const path of ["/", "/receipt", "/spending", "/spending/data-fin-buv11-2024", "/campaigns", "/campaigns/new", "/campaigns/abc", "/petitions", "/admin", "/api/breakdown", "/api/spending", "/api/me"]) {
+      const res = await proxy(request(path));
+      expect(res, path).toBe(authResponse);
+    }
+    // Routes check login themselves (401 from requireUser, 404 from requireAdmin), so the proxy doesn't need the session.
+    expect(auth0.getSession).not.toHaveBeenCalled();
+  });
+
+  it("sends logged-out visitors to login on a starter's own pages, keeping the page to return to", async () => {
+    for (const path of ["/campaigns/abc/edit", "/campaigns/abc/live"]) {
+      const res = await proxy(request(`${path}?from=story`));
+      expect(res.status).toBe(307);
+      const location = new URL(res.headers.get("location")!);
+      expect(location.pathname).toBe("/auth/login");
+      expect(location.searchParams.get("returnTo")).toBe(`${path}?from=story`);
+    }
+  });
+
+  it("lets logged-in starters open their own pages", async () => {
     auth0.getSession.mockResolvedValue({ user: { sub: "auth0|alice" } });
-    const res = await proxy(request("/petition/new?story=x"));
+    const res = await proxy(request("/campaigns/abc/edit"));
     expect(res).toBe(authResponse);
-  });
-
-  it("redirects logged-out page requests to login, keeping the page to return to", async () => {
-    const res = await proxy(request("/petition/new?story=data-fin-buv11-2024"));
-    expect(res.status).toBe(307);
-    const location = new URL(res.headers.get("location")!);
-    expect(location.pathname).toBe("/auth/login");
-    expect(location.searchParams.get("returnTo")).toBe("/petition/new?story=data-fin-buv11-2024");
-  });
-
-  it("returns 401 JSON for logged-out API requests", async () => {
-    const res = await proxy(request("/api/me"));
-    expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ error: "unauthorized" });
   });
 
   it("lets everything through in development when Auth0 is not configured", async () => {
