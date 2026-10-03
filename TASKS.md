@@ -4,12 +4,12 @@
 
 A user enters income + province, sees their federal tax broken down by where it goes, browses real federal spending stories with their personal share of each, and starts or joins a campaign on that story in the app. Once a campaign has enough supporters, our team asks an MP to sponsor it, opens the official e-petition on ourcommons.ca, and emails every supporter a link to sign it there.
 
-**In the MVP:** 6 screens (layout from the wireframe), real tax math, real government spending data, stories from that data plus news, real MP lookup, Auth0 login when the app opens.
+**In the MVP:** 6 screens (layout from the wireframe), real tax math, real government spending data, stories from that data plus news, real MP lookup, Auth0 login only when someone starts, joins or leaves a campaign.
 
 **Not in the MVP (stretch):** automated emails through an email service (e.g. telling members when their campaign changes stage, reminders), syncing official signature counts + the government's response from ourcommons.ca, auto-closing campaigns at the deadline, signature trend charts, provincial items.
 
 **Ground rules**
-- Auth0 login comes first, before screen 01. Every screen needs a logged-in user.
+- Browsing needs no account: the receipt, stories, campaigns and petitions are public. Auth0 login is asked for only when someone acts (start, join, leave or edit a campaign), and the header has an optional "Log in" link.
 - Income never leaves the device. The tax calculation runs on the client.
 - Only federal items get a campaign card. House of Commons e-petitions can't cover provincial spending.
 - **Our app builds support; the official petition lives on ourcommons.ca.** Joining in the app is support, not a signature. Everyone signs again on ourcommons.ca.
@@ -167,8 +167,8 @@ No fuzzy matching: a campaign belongs to the story it was started from. A story 
 ### Task 1: Build auth (Auth0)
 Branch: `platform/auth`
 - **Phase 1:** Create the Auth0 tenant and app, share env vars with the team.
-- **Phase 2:** Auth0 login in the frontend as the first step of the app, before screen 01. JWT validation middleware on the API for `/me/*` routes.
-- **Phase 3:** Create the user row on first login. Make sure logged-out users are sent to login from any screen, including direct links.
+- **Phase 2:** Auth0 login in the frontend, asked for only when someone acts on a campaign. API routes check the session themselves (`requireUser`, `requireAdmin`).
+- **Phase 3:** Create the user row on first login. Logged-out users can open any public screen, including direct links; only a starter's own pages (edit, live) send them to login.
 
 ### Task 2: Build MP lookup + sponsor email
 Branch: `platform/mp-lookup`
